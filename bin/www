@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+"use strcit";
 
 /**
  * Module dependencies.
@@ -7,27 +8,10 @@
 var app = require('../app');
 var debug = require('debug')('server:server');
 var http = require('http');
+var mongoose = require('mongoose');
 
-/**
- * Get port from environment and store in Express.
- */
-
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
-
-/**
- * Create HTTP server.
- */
-
-var server = http.createServer(app);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+var MONGO_URI = 'mongodb://mongo:27017/stockr';
+var db = mongoose.connect;
 
 /**
  * Normalize a port into a number, string, or false.
@@ -88,3 +72,41 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+function run(db) {
+  var port = normalizePort(process.env.PORT || '3000');
+  app.set('port', port);
+  var server = http.createServer(app);
+  server.listen(port);
+  server.on('error', onError);
+  server.on('listening', onListening);
+}
+
+db.on('connecting', function() {
+    console.log('connecting to MongoDB...');
+});
+
+db.on('error', function(error) {
+  console.error('Error in MongoDb connection: ' + error);
+  mongoose.disconnect();
+});
+
+db.on('connected', function() {
+  console.log('MongoDB connected!');
+});
+
+db.once('open', function() {
+  console.log('MongoDB connection opened!');
+  run(db);
+});
+
+db.on('reconnected', function () {
+  console.log('MongoDB reconnected!');
+});
+
+db.on('disconnected', function() {
+  console.log('MongoDB disconnected!');
+  mongoose.connect(MONGO_URI, {server:{auto_reconnect:true}});
+});
+
+mongoose.connect(MONGO_URI, { server: { auto_reconnect: true }})
