@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
-var stockRoutes = require('../controllers/stock.controller');
+var authController = require('../controllers/auth.controller');
 
 /* GET home page. */
-router.get('/', stockRoutes.index);
+router.get('/', authController.index);
 
 module.exports = router;
