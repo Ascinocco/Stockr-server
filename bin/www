@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-"use strcit";
 
 /**
  * Module dependencies.
@@ -9,9 +8,6 @@ var app = require('../app');
 var debug = require('debug')('server:server');
 var http = require('http');
 var mongoose = require('mongoose');
-
-var MONGO_URI = 'mongodb://mongo:27017/stockr';
-var db = mongoose.connect;
 
 /**
  * Normalize a port into a number, string, or false.
@@ -61,52 +57,41 @@ function onError(error) {
   }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
 
-function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
-}
-
-function run(db) {
+function run() {
   var port = normalizePort(process.env.PORT || '3000');
   app.set('port', port);
   var server = http.createServer(app);
   server.listen(port);
   server.on('error', onError);
-  server.on('listening', onListening);
 }
 
-db.on('connecting', function() {
+var MONGO_URI = 'mongodb://mongo:27017/stockr';
+mongoose.connect(MONGO_URI, { server: { auto_reconnect: true }});
+
+mongoose.connection.on('connecting', function() {
     console.log('connecting to MongoDB...');
 });
 
-db.on('error', function(error) {
+mongoose.connection.on('error', function(error) {
   console.error('Error in MongoDb connection: ' + error);
   mongoose.disconnect();
 });
 
-db.on('connected', function() {
+mongoose.connection.on('connected', function() {
   console.log('MongoDB connected!');
+  run();
 });
 
-db.once('open', function() {
+mongoose.connection.once('open', function() {
   console.log('MongoDB connection opened!');
-  run(db);
 });
 
-db.on('reconnected', function () {
+mongoose.connection.on('reconnected', function () {
   console.log('MongoDB reconnected!');
 });
 
-db.on('disconnected', function() {
+mongoose.connection.on('disconnected', function() {
   console.log('MongoDB disconnected!');
   mongoose.connect(MONGO_URI, {server:{auto_reconnect:true}});
 });
-
-mongoose.connect(MONGO_URI, { server: { auto_reconnect: true }})
