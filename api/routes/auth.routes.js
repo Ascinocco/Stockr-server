@@ -1,12 +1,8 @@
 var express = require('express');
 var router = express.Router();
+var authController = require('../controllers/auth.controller');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.json({
-    success: true,
-    msg: "Auth routes"
-  })
-});
+router.get('/', authController.index);
 
 module.exports = router;
