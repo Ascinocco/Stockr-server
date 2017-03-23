@@ -64,6 +64,7 @@ function run() {
   var server = http.createServer(app);
   server.listen(port);
   server.on('error', onError);
+  console.log('App running...');
 }
 
 var MONGO_URI = 'mongodb://mongo:27017/stockr';

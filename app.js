@@ -13,6 +13,8 @@ var stockRoutes = require('./api/routes/stock.routes');
 
 // middleware
 var CORSMiddleware = require('./api/middleware/cors.middleware');
+var ErrorHandlerMiddlware = require('./api/middleware/error.handler.middleware');
+var PageNotFoundMiddleware = require('./api/middleware/not.found.middleware');
 
 var app = express();
 
@@ -26,26 +28,16 @@ app.use('/api/auth/', authRoutes);
 app.use('/api/users/', userRoutes);
 app.use('/api/stocks', stockRoutes)
 
-// my middleware
+// middleware
+
+// cors
 app.use(cors());
 app.use(CORSMiddleware.allowCORS);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
+app.use(PageNotFoundMiddleware.handler);
 
 // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+app.use(ErrorHandlerMiddlware.handler);
 
 module.exports = app;
