@@ -81,11 +81,11 @@ mongoose.connection.on('error', function(error) {
 
 mongoose.connection.on('connected', function() {
   console.log('MongoDB connected!');
-  run();
 });
 
 mongoose.connection.once('open', function() {
   console.log('MongoDB connection opened!');
+  run();
 });
 
 mongoose.connection.on('reconnected', function () {
