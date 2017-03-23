@@ -25,8 +25,8 @@ app.use(cookieParser());
 
 // routes
 app.use('/api/auth/', authRoutes);
-app.use('/api/users/', userRoutes);
-app.use('/api/stocks', stockRoutes)
+app.use('/api/user/', userRoutes);
+app.use('/api/stocks/', stockRoutes)
 
 // middleware
 

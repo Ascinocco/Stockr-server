@@ -5,8 +5,6 @@ var authMiddlware = require('../middleware/auth.middleware');
 
 // auth route middleware
 router.use(authMiddlware.checkToken);
-
-/* GET users listing. */
-router.get('/', userController.index);
+router.post('/update', userController.update);
 
 module.exports = router;
