@@ -12,10 +12,10 @@ var UserController = (function() {
     }
 
     var update = function(req, res, next) {
-        var userId = req.params["id"];
+        var id = req.headers["id"];
         
-        if(!userId) {
-            return res.json({ success: false, msg: "Missing user ID" });
+        if(!id) {
+            return res.json({ success: false, msg: "Missing id" });
         }
 
         var updates = {
@@ -24,7 +24,7 @@ var UserController = (function() {
             email: req.body["email"]
         }
 
-        User.findByIdAndUpdate(userId, userUpdates,
+        User.findOneAndUpdate({ _id: id },
         {
             $set: { 
                 firstName: updates.firstName,
@@ -39,12 +39,10 @@ var UserController = (function() {
                 return res.json({ success: false, msg: "Could not find you.", err: err });
             }
 
-
-
             res.json({
                 success: true,
                 msg: "You\'re account has been updated!",
-                user: user.toJSON()
+                user: user
             })
 
         });

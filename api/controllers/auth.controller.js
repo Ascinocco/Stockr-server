@@ -27,14 +27,22 @@ var AuthController = (function() {
                     expiresIn: '8h'
                 });
 
-                // set token header
-                res.set('x-access-token', token);
+                user.token = token;
+                user.save(function(err, user) {
+                    if (err) {
+                        return res.json({ success: false, msg: "Could not update your token" });
+                    }
 
-                return res.json({
-                    success: true,
-                    msg: "Welcome " + user.firstName,
-                    user: user.toJSON()
-                });
+                    // set token header
+                    res.set('x-access-token', token);
+
+                    return res.json({
+                        success: true,
+                        msg: "Welcome " + user.firstName,
+                        user: user.toJSON()
+                    });
+
+                })
             });
         }); 
     }
@@ -74,12 +82,19 @@ var AuthController = (function() {
                 expiresIn: '8h'
             })
 
-            res.set('x-access-token', token);
+            user.token = token;
+            user.save(function(err, user) {
+                if (err) {
+                    return res.json({ success: false, msg: "Could not update your token" });
+                }
 
-            return res.json({
-                success: true,
-                msg: "Your account has been created! Follow some stocks",
-                user: user.toJSON()
+                res.set('x-access-token', token);
+
+                return res.json({
+                    success: true,
+                    msg: "Your account has been created! Follow some stocks",
+                    user: user.toJSON()
+                });
             });
         });
     }

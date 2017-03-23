@@ -1,12 +1,14 @@
 var express = require('express');
 var jwt = require('jsonwebtoken');
+var User = require('../models/user');
 var config = require('../config/config');
 
 var AuthMiddleware = (function() {
     var checkToken = function(req, res, next) {
         var token = req.headers["x-access-token"];
+        var id = req.headers["id"];
 
-        if (token) {
+        if (token && id) {
 
             jwt.verify(token, config.secret, function(err, decoded) {
                 if (err) {
@@ -30,15 +32,32 @@ var AuthMiddleware = (function() {
                     })
                 }
 
-                // move on if no errors with token
-                next();
+                User.findOne({ _id: id }, function(err, user) {
+                    if (err) {
+                        console.log(err);
+                        return res.json({
+                            success: false,
+                            msg: "An error occured looking you up"
+                        });
+                    }
 
+                    if (user.token !== token) {
+                        return res.json({
+                            success: false,
+                            msg: "Could not find an association between you and the token provided"
+                        });
+                    }
+
+                    res.set('id', user._id);
+                    res.set('x-access-token', user.token);
+                    next();
+                });
             });
 
         } else {
             res.json({
                 success: false,
-                msg: "No token provided"
+                msg: "No token or id provided"
             })
         }
     }

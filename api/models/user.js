@@ -4,10 +4,11 @@ var bcrypt = require('bcrypt');
 var SALT_WORK_FACTOR = 10;
 
 var userSchema = new Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    firstName:  { type: String, required: true },
+    lastName:   { type: String, required: true },
+    email:      { type: String, required: true, unique: true },
+    password:   { type: String, required: true },
+    token:      { type: String, default: "" },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
 });
@@ -69,6 +70,7 @@ userSchema.methods.comparePassword = function(candidatePassword, callback) {
 userSchema.methods.toJSON = function() {
     let user  = this.toObject();
     delete user.password;
+    delete user.token;
     return user;
 }
 
