@@ -50,8 +50,10 @@ var AuthController = (function() {
     var register = function (req, res, next) {
         var DUPLICATE_RECORD_ERROR = 11000;
 
+        console.log(req.body);
+
         // compare password
-        if (req.body.password !== req.body.confirmPassword) {
+        if (req.body.user.password !== req.body.confirmPassword) {
             return res.json({
                 success: false,
                 msg: "The passwords you entered do not match"
