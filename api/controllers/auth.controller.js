@@ -61,10 +61,10 @@ var AuthController = (function() {
         }
 
         var newUser = new User({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            email: req.body.email,
-            password: req.body.password
+            firstName: req.body.user.firstName,
+            lastName: req.body.user.lastName,
+            email: req.body.user.email,
+            password: req.body.user.password
         });
 
         newUser.save(function(err, user) {
