@@ -23,16 +23,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// cors
+app.use(cors());
+app.use(CORSMiddleware.allowCORS);
+
 // routes
 app.use('/api/auth/', authRoutes);
 app.use('/api/user/', userRoutes);
 app.use('/api/stocks/', stockRoutes)
-
-// middleware
-
-// cors
-app.use(cors());
-app.use(CORSMiddleware.allowCORS);
 
 // catch 404 and forward to error handler
 app.use(PageNotFoundMiddleware.handler);
