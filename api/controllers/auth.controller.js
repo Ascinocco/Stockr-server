@@ -35,6 +35,7 @@ var AuthController = (function() {
 
                     // set token header
                     res.set('x-access-token', token);
+                    res.set('_id', user._id);
 
                     return res.json({
                         success: true,
@@ -91,6 +92,7 @@ var AuthController = (function() {
                 }
 
                 res.set('x-access-token', token);
+                res.set('_id', user._id);
 
                 return res.json({
                     success: true,
@@ -101,10 +103,32 @@ var AuthController = (function() {
         });
     }
 
+    var logout = function(req, res, next) {
+        var id = req.headers["_id"];
+
+        User.findOneAndUpdate({ _id: id },
+        { $set: { token: "" } },
+        { new: true },
+        function(err, user) {
+            if (err) {
+                return res.json({
+                    success: false,
+                    msg: 'Logout failed, oh no!',
+                    err: err
+                });
+            }
+
+            return res.json({
+                success: true
+            });
+        })
+    }
+
     // functions and variables returned here are considered public
     return {
         login: login,
-        register: register
+        register: register,
+        logout: logout
     }
 
 })();

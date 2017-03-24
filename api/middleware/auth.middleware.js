@@ -6,7 +6,7 @@ var config = require('../config/config');
 var AuthMiddleware = (function() {
     var checkToken = function(req, res, next) {
         var token = req.headers["x-access-token"];
-        var id = req.headers["id"];
+        var id = req.headers["_id"];
 
         if (token && id) {
 
