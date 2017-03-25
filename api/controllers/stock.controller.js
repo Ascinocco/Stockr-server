@@ -40,7 +40,30 @@ var StockController = (function() {
     }
 
     var search = function(req, res, next) {
+        // check if stock exists
+        var checkSymbols = [ symbol ];
+        var checkUrl = buildStockQueryString(checkSymbols, { SYMBOL: STOCK_FORMATER_KEYS.SYMBOL });
+        var checkOptions = assembleRequest(url);
 
+        request(checkOptions, function(error, response, checkedCsvStock) {
+            if (error) {
+                return res.json({
+                    success: false,
+                    msg: 'The stock you tried to add for (' + symbol + ') could not be found'
+                });
+            }
+                    
+            var jsonResults = Baby.parse(checkedCsvStock, {
+                quotes: true,
+                quoteChar: '"',
+                delimiter: ',',
+                header: false,
+                newLine: '\n'
+            });
+
+            var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
+                jsonResults.data = jsonStockData;
+            })
     }
 
     var add = function(req, res, next) {
@@ -48,6 +71,23 @@ var StockController = (function() {
         var id = req.headers["_id"];
         if (symbol) {
             User.findOne({ _id: id }, function(err, user) {
+
+                // validation here
+                // check if user is already watching stock
+                if (user.stocks.length > 0) {
+                    for (var i = 0; i < user.stocks.length; i++) {
+                        if (user.stocks[i] === symbol) {
+                             return res.json({
+                                success: false,
+                                msg: 'You are already watching ' + symbol
+                            })
+                        }
+                    }
+                }
+
+                // since we already check if the stock exists when we search for it
+                // there is no need to check for it again here
+
                 user.stocks.push(symbol);
                 user.save(function(err) {
                     if (err) {
@@ -62,13 +102,14 @@ var StockController = (function() {
                         msg: "Stock: " + symbol + " has been added to your watch list" 
                     });
                 });
+
+            })
+        } else {
+            return res.json({
+                success: false,
+                msg: 'Missing stock symbol'
             })
         }
-
-        return res.json({
-            success: false,
-            msg: 'Missing stock symbol'
-        })
     }
 
     var remove = function(req, res, next) {
