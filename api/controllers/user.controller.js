@@ -3,16 +3,8 @@ var User = require('../models/user');
 
 var UserController = (function() {
 
-    var index = function(req, res, next)
-    {
-        res.json({
-            success: true,
-            msg: "User Routes form ctrl"
-        })
-    }
-
     var update = function(req, res, next) {
-        var id = req.headers["id"];
+        var id = req.headers["_id"];
         
         if(!id) {
             return res.json({ success: false, msg: "Missing id" });
