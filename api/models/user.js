@@ -9,6 +9,7 @@ var userSchema = new Schema({
     email:      { type: String, required: true, unique: true },
     password:   { type: String, required: true },
     token:      { type: String, default: "" },
+    stocks: { type: Array, default: [], required: false },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
 });
