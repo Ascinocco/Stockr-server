@@ -40,9 +40,29 @@ var UserController = (function() {
         });
     }
 
+    // for some reason "delete" will not work as a method name......
+    var deleteAccount = function(req, res, next) {
+        var id = req.headers["_id"];
+
+        if (!id) {
+            return res.json({ success: false, msg: "Missing id" });
+        }
+
+        User.findOneAndRemove({ _id: id }, function(err, user) {
+            if (err) {
+                return res.json({ success: false, msg: "Could not delete your account. Please try again." });
+            }
+
+            return res.json({
+                success: true
+            });
+        });
+    }
+
     // functions and variables returned here are considered public
     return {
-        update: update
+        update: update,
+        deleteAccount: deleteAccount 
     }
 
 })();
