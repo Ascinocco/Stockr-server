@@ -45,6 +45,7 @@ var StockController = (function() {
             }
 
             if (symbols.length > 0) {
+                // using default small set of symbols for non-detailed view
                 var url = buildStockQueryString(symbols, {
                     SYMBOL: STOCK_FORMATER_KEYS.SYMBOL,
                     NAME: STOCK_FORMATER_KEYS.NAME,
@@ -88,7 +89,47 @@ var StockController = (function() {
     }
 
     var details = function(req, res, next) {
+        var symbol = req.body.symbol;
+        var symbols = [];
 
+        console.log(symbols.length);
+
+        if (symbol) {
+            symbols.push(symbol);
+            var url = buildStockQueryString(symbols, STOCK_FORMATER_KEYS);
+            var options = assembleRequest(url);
+
+            request(options, function(error, response, csvStockData) {
+                if (error) {
+                    return res.json({
+                        success: false,
+                        msg: 'Could not fetch stocks'
+                    });
+                }
+                
+                var jsonResults = Baby.parse(csvStockData, {
+                    quotes: true,
+                    quoteChar: '"',
+                    delimiter: ',',
+                    header: false,
+                    newLine: '\n'
+                });
+
+                var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
+                jsonResults.data = jsonStockData;
+
+                return res.json({
+                    success: true,
+                    jsonResults: jsonResults
+                })
+            });
+
+        } else {
+            return res.json({
+                success: false,
+                msg: 'No stock symbol provided'
+            });
+        }
     }
 
     var search = function(req, res, next) {
@@ -257,8 +298,6 @@ var StockController = (function() {
             assembledSymbols += symbols[symbol].toString() + "+";
         }
 
-        console.log(formats);
-
         for (var key in formats) {
             if (STOCK_FORMATER_KEYS.hasOwnProperty(key)) {
                 assembledFormats += STOCK_FORMATER_KEYS[key];
@@ -270,8 +309,6 @@ var StockController = (function() {
 
         // assemble complete URL
         url += assembledSymbols + assembledFormats;
-
-        console.log(url);
 
         return url;
     }
