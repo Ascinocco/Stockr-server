@@ -44,7 +44,31 @@ var StockController = (function() {
     }
 
     var add = function(req, res, next) {
+        var symbol = req.body.symbol;
+        var id = req.headers["_id"];
+        if (symbol) {
+            User.findOne({ _id: id }, function(err, user) {
+                user.stocks.push(symbol);
+                user.save(function(err) {
+                    if (err) {
+                        return res.json({
+                            success: false,
+                            msg: 'Could not save the stock'
+                        });
+                    }
 
+                    return res.json({
+                        success: true,
+                        msg: "Stock: " + symbol + " has been added to your watch list" 
+                    });
+                });
+            })
+        }
+
+        return res.json({
+            success: false,
+            msg: 'Missing stock symbol'
+        })
     }
 
     var remove = function(req, res, next) {
@@ -65,8 +89,10 @@ var StockController = (function() {
 
         request(options, function(error, response, csvStockData) {
             if (error) {
-                console.error('ERROR!!!---------');
-                console.error(error);
+                return res.json({
+                    success: false,
+                    msg: 'Could not fetch stocks'
+                });
             }
             
             var jsonResults = Baby.parse(csvStockData, {
@@ -80,10 +106,9 @@ var StockController = (function() {
             var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
             jsonResults.data = jsonStockData;
 
-            res.json({
+            return res.json({
                 success: true,
                 jsonResults: jsonResults
-
             })
         });
     }
