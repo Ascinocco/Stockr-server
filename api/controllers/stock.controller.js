@@ -78,10 +78,7 @@ var StockController = (function() {
             });
 
             var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
-
             jsonResults.data = jsonStockData;
-
-            console.log(jsonResults.data);
 
             res.json({
                 success: true,
@@ -118,6 +115,8 @@ var StockController = (function() {
 
         // assemble complete URL
         url += assembledSymbols + assembledFormats;
+
+        console.log(url);
 
         return url;
     }
