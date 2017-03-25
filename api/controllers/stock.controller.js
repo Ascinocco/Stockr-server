@@ -55,7 +55,7 @@ var StockController = (function() {
     // however the yahoo finance api makes it hard to do this and I don't have enough server horsepower to
     // so I googled to the most popular stocks and picked some and those will be the default
     var popular = function(req, res, next) {
-        var symbols = [ 'AAPL', 'GOOG', 'GE', 'MSFT' ];
+        var symbols = [ 'AAPL', 'GOOG', 'GE', 'MSFT'];
         var url = buildStockQueryString(symbols, {
             SYMBOL: STOCK_FORMATER_KEYS.SYMBOL,
             NAME: STOCK_FORMATER_KEYS.NAME,
@@ -69,7 +69,7 @@ var StockController = (function() {
                 console.error(error);
             }
             
-            var jsonStockData = Baby.parse(csvStockData, {
+            var jsonResults = Baby.parse(csvStockData, {
                 quotes: true,
                 quoteChar: '"',
                 delimiter: ',',
@@ -77,10 +77,15 @@ var StockController = (function() {
                 newLine: '\n'
             });
 
-            console.log(jsonStockData);
+            var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
+
+            jsonResults.data = jsonStockData;
+
+            console.log(jsonResults.data);
 
             res.json({
-                success: true
+                success: true,
+                jsonResults: jsonResults
 
             })
         });
@@ -127,8 +132,77 @@ var StockController = (function() {
         return options;
     }
 
-   var resultArrayToJson = function(resultArray) {
+    /**
+     * Since we know what order the array will be in everytime
+     * we can pretty easily map it to a json object
+     * 
+     * I would like to note that I'm not proud of this
+     * but given the time constraints and other assignments
+     * this will do
+     * 
+     * TODO: better name for method
+     * TODO: Never speak of this function as long as i live.
+     * 
+     * @param {Array} resultArray 
+     */
+   var resultsArrayToArryOfJson = function(resultsArray) {
+        var resultsArrayOfJson = [];
 
+        for (var result = 0; result < resultsArray.length; result++) {
+            var tempResult = {};
+            
+            if (resultsArray[result][0] != false) {
+                tempResult["SYMBOL"] = resultsArray[result][0];
+            }
+            if (resultsArray[result][1] != false) {
+                tempResult["NAME"] = resultsArray[result][1];
+            }
+            if (resultsArray[result][2] != false) {
+                tempResult["ASKING_PRICE"] = resultsArray[result][2];
+            }
+            if (resultsArray[result][3] != false) {
+                tempResult["TODAYS_HIGHEST_BID"] = resultsArray[result][3];
+            }
+            if (resultsArray[result][4] != false) {
+                tempResult["TODAYS_LOWEST_BID"] = resultsArray[result][4];
+            }
+            if (resultsArray[result][5] != false) {
+                tempResult["CHANGE_IN_PERCENT"] = resultsArray[result][5];
+            }
+            if (resultsArray[result][6] != false) {
+                tempResult["LAST_TRADE"] = resultsArray[result][6];
+            }
+            if (resultsArray[result][7] != false) {
+                tempResult["THIS_WEEKS_HIGHEST_PRICE"] = resultsArray[result][7];
+            }
+            if (resultsArray[result][8] != false) {
+                tempResult["THIS_WEEKS_LOWEST_PRICE"] = resultsArray[result][8];
+            }
+            if (resultsArray[result][9] != false) {
+                tempResult["EARNINGS_PER_SHARE"] = resultsArray[result][9];
+            }
+            if (resultsArray[result][10] != false) {
+                tempResult["WEEKS_RANGE"] = resultsArray[result][10];
+            }
+            if (resultsArray[result][11] != false) {
+                tempResult["CHANGE_FROM_THIS_WEEKS_HIGH_IN_PERCENT"] = resultsArray[result][11];
+            }
+            if (resultsArray[result][12] != false) {
+                tempResult["CHANGE_FROM_THIS_WEEKS_HIGH_IN_DECIMAL"] = resultsArray[result][12];
+            }
+            if (resultsArray[result][13] != false) {
+                tempResult["CHANGE_FROM_THIS_WEEKS_LOW_IN_PERCENT"] = resultsArray[result][13];
+            }
+            if (resultsArray[result][14] != false) {
+                tempResult["CHANGE_FROM_THIS_WEEKS_LOW_IN_DECIMAL"] = resultsArray[result][14];
+            }
+
+            resultsArrayOfJson.push(tempResult);
+        }
+
+        // remove last value on array, it is always undefined, not sure why
+        resultsArrayOfJson.splice(-1, 1);
+        return resultsArrayOfJson;
    }
 
     // functions and variables returned here are considered public
