@@ -113,7 +113,45 @@ var StockController = (function() {
     }
 
     var remove = function(req, res, next) {
+        var id = req.headers["_id"];
+        var symbol = req.body.symbol;
+        console.log('REMOVING IOSEJGOSKGOKG')
 
+        if (symbol) {
+            User.findOne({ _id: id }, function(err, user) {
+                if (err) {
+                    return res.json({
+                        success: false,
+                        msg: 'We couldn\'t find your account :/'
+                    })
+                }
+
+                for (var i = 0; i < user.stocks.length; i++) {
+                    if (user.stocks[i] === symbol) {
+                        user.stocks.splice(i, 1);
+                    }
+                }
+
+                user.save(function(err) {
+                    if (err) {
+                        return res.json({
+                            success: false,
+                            msg: 'Failed to remove stock'
+                        })
+                    }
+
+                    return res.json({
+                        success: true,
+                        msg: 'You are no longer watching ' + symbol
+                    });
+                })
+            })
+        } else {
+            return res.json({
+                success: false,
+                msg: 'Missing stock symbol'
+            })
+        }
     }
 
     // realistically I should be getting all of the stocks and filtering based on revenue or market share or something

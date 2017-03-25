@@ -10,6 +10,6 @@ router.post('/', stockController.feed); // get all stocks that user is subscribe
 router.post('/search', stockController.search); // search for stocks
 router.post('/add', stockController.add); // add stock to watched stocks
 router.post('/popular', stockController.popular); // list of popular stocks
-router.delete('/remove', stockController.remove); // remove a followed stock
+router.post('/remove', stockController.remove); // remove a followed stock
 
 module.exports = router;
