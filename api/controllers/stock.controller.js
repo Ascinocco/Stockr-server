@@ -36,7 +36,59 @@ var StockController = (function() {
     // returns all stocks a user is subscribed to
     var feed = function(req, res, next)
     {
-       
+        var id = req.headers["_id"];
+        User.findOne({ _id: id }, function(err, user) {
+            var symbols = [];
+
+            for (var i = 0; i < user.stocks.length; i++) {
+                symbols.push(user.stocks[i]);
+            }
+
+            if (symbols.length > 0) {
+                var url = buildStockQueryString(symbols, {
+                    SYMBOL: STOCK_FORMATER_KEYS.SYMBOL,
+                    NAME: STOCK_FORMATER_KEYS.NAME,
+                    ASKING_PRICE: STOCK_FORMATER_KEYS.ASKING_PRICE
+                });
+
+                var options = assembleRequest(url);
+
+                request(options, function(error, response, csvStockData) {
+                    if (error) {
+                        return res.json({
+                            success: false,
+                            msg: 'Could not fetch stocks'
+                        });
+                    }
+                    
+                    var jsonResults = Baby.parse(csvStockData, {
+                        quotes: true,
+                        quoteChar: '"',
+                        delimiter: ',',
+                        header: false,
+                        newLine: '\n'
+                    });
+
+                    var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
+                    jsonResults.data = jsonStockData;
+
+                    return res.json({
+                        success: true,
+                        jsonResults: jsonResults
+                    })
+                });
+
+            } else {
+                return res.json({
+                    success: false,
+                    msg: 'You are not watching any stocks!'
+                });
+            }
+        });
+    }
+
+    var details = function(req, res, next) {
+
     }
 
     var search = function(req, res, next) {
@@ -115,7 +167,6 @@ var StockController = (function() {
     var remove = function(req, res, next) {
         var id = req.headers["_id"];
         var symbol = req.body.symbol;
-        console.log('REMOVING IOSEJGOSKGOKG')
 
         if (symbol) {
             User.findOne({ _id: id }, function(err, user) {
@@ -314,7 +365,8 @@ var StockController = (function() {
         search: search,
         add: add,
         remove: remove,
-        popular: popular
+        popular: popular,
+        details: details
     }
 
 })();
