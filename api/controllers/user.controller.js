@@ -4,39 +4,42 @@ var User = require('../models/user');
 var UserController = (function() {
 
     var update = function(req, res, next) {
-        var id = req.headers["_id"];
+        var user = req["currentUser"];
+        var token = req["currentToken"];
         
-        if(!id) {
-            return res.json({ success: false, msg: "Missing id" });
+        if(!user) {
+            return res.json({ success: false, msg: "Missing user" });
         }
 
-        var updates = {
-            firstName: req.body["firstName"],
-            lastName: req.body["lastName"],
-            email: req.body["email"]
+        if (req.body["firstName"]) {
+            user.firstName = req.body["firstName"];
         }
 
-        User.findOneAndUpdate({ _id: id },
-        {
-            $set: { 
-                firstName: updates.firstName,
-                lastName: updates.lastName,
-                email: updates.email
-            }
-        },{
-            new: true
-        },
-        function(err, user) {
+        if (req.body["lastName"]) {
+            user.lastName = req.body["lastName"];
+        }
+
+        if (req.body["email"]) {
+            user.email = req.body["email"]; 
+        }
+
+
+        user.save(function(err, user) {
             if (err) {
-                return res.json({ success: false, msg: "Could not find you.", err: err });
+                console.log(err);
+                return res.json({
+                    success: false,
+                    msg: "Error updating your account"
+                })
             }
 
-            res.json({
+            res.set('x-access-token', token);
+            res.set('user', user.toJSON());
+            return res.json({
                 success: true,
-                msg: "You\'re account has been updated!",
-                user: user
+                msg: "Your account has been updated!",
+                user: user.toJSON()
             })
-
         });
     }
 
