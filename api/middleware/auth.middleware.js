@@ -6,9 +6,8 @@ var config = require('../config/config');
 var AuthMiddleware = (function() {
     var checkToken = function(req, res, next) {
         var token = req.headers["x-access-token"];
-        var id = req.headers["_id"];
 
-        if (token && id) {
+        if (token) {
 
             jwt.verify(token, config.secret, function(err, decoded) {
                 if (err) {
@@ -32,7 +31,7 @@ var AuthMiddleware = (function() {
                     })
                 }
 
-                User.findOne({ _id: id }, function(err, user) {
+                User.findOne({'token.value': token }, function(err, user) {
                     if (err) {
                         console.log(err);
                         return res.json({
@@ -41,16 +40,24 @@ var AuthMiddleware = (function() {
                         });
                     }
 
-                    if (user.token !== token) {
+                    try {
+                        if (user.token.valid && user.token.value === token) {
+                            req["currentToken"] = token;
+                            req["currentUser"] = user;
+                            next();
+                        } else {
+                            return res.json({
+                                success: false,
+                                msg: "Could not find an association between you and the token provided"
+                            });
+                        }
+                    } catch (err) {
+                        console.log(err);
                         return res.json({
                             success: false,
-                            msg: "Could not find an association between you and the token provided"
-                        });
+                            msg: "No active login found"
+                        })
                     }
-
-                    res.set('id', user._id);
-                    res.set('x-access-token', user.token);
-                    next();
                 });
             });
 

@@ -24,18 +24,18 @@ var AuthController = (function() {
 
                 // issue token
                 var token = jwt.sign(user.toJSON(), config.secret, {
-                    expiresIn: '8h'
+                    expiresIn: '7d'
                 });
 
-                user.token = token;
+                user.addToken(token);
                 user.save(function(err, user) {
                     if (err) {
                         return res.json({ success: false, msg: "Could not update your token" });
                     }
 
-                    // set token header
+                    // set headers
                     res.set('x-access-token', token);
-                    res.set('_id', user._id);
+                    res.set('user', user.toJSON());
 
                     return res.json({
                         success: true,
@@ -51,10 +51,8 @@ var AuthController = (function() {
     var register = function (req, res, next) {
         var DUPLICATE_RECORD_ERROR = 11000;
 
-        console.log(req.body);
-
         // compare password
-        if (req.body.user.password !== req.body.confirmPassword) {
+        if (req.body.password !== req.body.confirmPassword) {
             return res.json({
                 success: false,
                 msg: "The passwords you entered do not match"
@@ -62,10 +60,10 @@ var AuthController = (function() {
         }
 
         var newUser = new User({
-            firstName: req.body.user.firstName,
-            lastName: req.body.user.lastName,
-            email: req.body.user.email,
-            password: req.body.user.password
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            email: req.body.email,
+            password: req.body.password
         });
 
         newUser.save(function(err, user) {
@@ -82,17 +80,17 @@ var AuthController = (function() {
             }
 
             var token = jwt.sign(user.toJSON(), config.secret, {
-                expiresIn: '8h'
+                expiresIn: '7d'
             })
 
-            user.token = token;
+            user.addToken(token);
             user.save(function(err, user) {
                 if (err) {
                     return res.json({ success: false, msg: "Could not update your token" });
                 }
 
                 res.set('x-access-token', token);
-                res.set('_id', user._id);
+                res.set('user', user.toJSON());
 
                 return res.json({
                     success: true,
@@ -104,24 +102,24 @@ var AuthController = (function() {
     }
 
     var logout = function(req, res, next) {
-        var id = req.headers["_id"];
+        var token = req["currentToken"];
+        var user  = req["currentUser"];
 
-        User.findOneAndUpdate({ _id: id },
-        { $set: { token: "" } },
-        { new: true },
-        function(err, user) {
+        user.revokeToken();
+        user.save(function(err) {
             if (err) {
+                console.log(err);
                 return res.json({
                     success: false,
-                    msg: 'Logout failed, oh no!',
-                    err: err
-                });
+                    msg: "We couldn't log you out, please try again"
+                })
             }
 
             return res.json({
-                success: true
-            });
-        })
+                success: true,
+                msg: "Goodbye :)"
+            })
+        });
     }
 
     // functions and variables returned here are considered public

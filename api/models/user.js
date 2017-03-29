@@ -8,7 +8,10 @@ var userSchema = new Schema({
     lastName:   { type: String, required: true },
     email:      { type: String, required: true, unique: true },
     password:   { type: String, required: true },
-    token:      { type: String, default: "" },
+    token: {
+        value: { type: String, default: "null" },
+        valid: { type: Boolean, required: true, default: true }
+    }, 
     stocks: { type: Array, default: [], required: false },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
@@ -65,13 +68,28 @@ userSchema.methods.comparePassword = function(candidatePassword, callback) {
     });
 }
 
+userSchema.methods.revokeToken = function() {
+    var user = this;
+    user.token.value = "null";
+    user.token.valid = false;
+}
+
+userSchema.methods.addToken = function (token) {
+    var user = this;
+    user.token.value = token;
+    user.token.valid = true;
+}
+
 // removes password field
 // any time user data is sent to the client
 // it should be sent as JSON
 userSchema.methods.toJSON = function() {
-    let user  = this.toObject();
+    var user = this.toObject();
     delete user.password;
     delete user.token;
+    delete user.created_at;
+    delete user.updated_at;
+    delete user._id;
     return user;
 }
 
