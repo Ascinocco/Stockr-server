@@ -12,6 +12,8 @@ var AuthMiddleware = (function() {
             jwt.verify(token, config.secret, function(err, decoded) {
                 if (err) {
                     if (err.name === "TokenExpiredError") {
+                        res.set('x-access-token', '');
+                        res.set('user', '');
                         return res.json({
                             success: false,
                             msg: "Invalid Token"
@@ -19,12 +21,16 @@ var AuthMiddleware = (function() {
                     }
 
                     if (err.name === "JsonWebTokenError") {
+                        res.set('x-access-token', '');
+                        res.set('user', '');
                         return res.json({
                             success: false,
                             msg: "Invalid Token"
                         })
                     }
 
+                    res.set('x-access-token', '');
+                    res.set('user', '');
                     return res.json({
                         success: false,
                         msg: "Failed to Authenticate"
@@ -34,6 +40,8 @@ var AuthMiddleware = (function() {
                 User.findOne({'token.value': token }, function(err, user) {
                     if (err) {
                         console.log(err);
+                        res.set('x-access-token', '');
+                        res.set('user', '');
                         return res.json({
                             success: false,
                             msg: "An error occured looking you up"
@@ -46,6 +54,8 @@ var AuthMiddleware = (function() {
                             req["currentUser"] = user;
                             next();
                         } else {
+                            res.set('x-access-token', '');
+                            res.set('user', '');
                             return res.json({
                                 success: false,
                                 msg: "Could not find an association between you and the token provided"
@@ -53,6 +63,8 @@ var AuthMiddleware = (function() {
                         }
                     } catch (err) {
                         console.log(err);
+                        res.set('x-access-token', '');
+                        res.set('user', '');
                         return res.json({
                             success: false,
                             msg: "No active login found"
@@ -62,6 +74,8 @@ var AuthMiddleware = (function() {
             });
 
         } else {
+            res.set('x-access-token', '');
+            res.set('user', '');
             res.json({
                 success: false,
                 msg: "No token or id provided"

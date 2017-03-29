@@ -36,56 +36,55 @@ var StockController = (function() {
     // returns all stocks a user is subscribed to
     var feed = function(req, res, next)
     {
-        var id = req.headers["_id"];
-        User.findOne({ _id: id }, function(err, user) {
-            var symbols = [];
+        var token = req["currentToken"];
+        var user = req["currentUser"];
+        var symbols = [];
 
-            for (var i = 0; i < user.stocks.length; i++) {
-                symbols.push(user.stocks[i]);
-            }
+        for (var i = 0; i < user.stocks.length; i++) {
+            symbols.push(user.stocks[i]);
+        }
 
-            if (symbols.length > 0) {
-                // using default small set of symbols for non-detailed view
-                var url = buildStockQueryString(symbols, {
-                    SYMBOL: STOCK_FORMATER_KEYS.SYMBOL,
-                    NAME: STOCK_FORMATER_KEYS.NAME,
-                    ASKING_PRICE: STOCK_FORMATER_KEYS.ASKING_PRICE
-                });
+        if (symbols.length > 0) {
+            // using default small set of symbols for non-detailed view
+            var url = buildStockQueryString(symbols, {
+                SYMBOL: STOCK_FORMATER_KEYS.SYMBOL,
+                NAME: STOCK_FORMATER_KEYS.NAME,
+                ASKING_PRICE: STOCK_FORMATER_KEYS.ASKING_PRICE
+            });
 
-                var options = assembleRequest(url);
+            var options = assembleRequest(url);
 
-                request(options, function(error, response, csvStockData) {
-                    if (error) {
-                        return res.json({
-                            success: false,
-                            msg: 'Could not fetch stocks'
-                        });
-                    }
-                    
-                    var jsonResults = Baby.parse(csvStockData, {
-                        quotes: true,
-                        quoteChar: '"',
-                        delimiter: ',',
-                        header: false,
-                        newLine: '\n'
-                    });
-
-                    var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
-                    jsonResults.data = jsonStockData;
-
+            request(options, function(error, response, csvStockData) {
+                if (error) {
                     return res.json({
-                        success: true,
-                        jsonResults: jsonResults
-                    })
+                        success: false,
+                        msg: 'Could not fetch stocks'
+                    });
+                }
+                    
+                var jsonResults = Baby.parse(csvStockData, {
+                    quotes: true,
+                    quoteChar: '"',
+                    delimiter: ',',
+                    header: false,
+                    newLine: '\n'
                 });
 
-            } else {
+                var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
+                jsonResults.data = jsonStockData;
+
                 return res.json({
-                    success: false,
-                    msg: 'You are not watching any stocks!'
-                });
-            }
-        });
+                    success: true,
+                    jsonResults: jsonResults
+                })
+            });
+
+        } else {
+            return res.json({
+                success: false,
+                msg: 'You are not watching any stocks!'
+            });
+        }
     }
 
     var details = function(req, res, next) {
@@ -159,44 +158,53 @@ var StockController = (function() {
             })
     }
 
+    /**
+     * No validation here to check if the stock exists in the 
+     * yahoo finance API because we already check exists in the 
+     * search function and you cannot add a stock without first searching
+     * for it.
+     * 
+     * Obviously someone could just find the url and send bad stock symbols
+     * but they would only be filling their own accounts with useless symbols
+     * and I don't have the time to do all that right now. 
+     * 
+     * TODO: add validation that stock exsists seperatley from the search
+     * function
+     * 
+     * @param {*} req 
+     * @param {*} res 
+     * @param {*} next 
+     */
     var add = function(req, res, next) {
-        var symbol = req.body.symbol;
-        var id = req.headers["_id"];
-        if (symbol) {
-            User.findOne({ _id: id }, function(err, user) {
+        var user = req["currentUser"];
+        var symbol = req.body.symbol.toUpperCase();
 
-                // validation here
-                // check if user is already watching stock
-                if (user.stocks.length > 0) {
-                    for (var i = 0; i < user.stocks.length; i++) {
-                        if (user.stocks[i] === symbol) {
-                             return res.json({
-                                success: false,
-                                msg: 'You are already watching ' + symbol
-                            })
-                        }
+        if (symbol) {
+            if (user.stocks.length > 0) {
+                for (var i = 0; i < user.stocks.length; i++) {
+                    if (user.stocks[i] === symbol) {
+                         return res.json({
+                            success: false,
+                            msg: 'You are already watching ' + symbol
+                        })
                     }
                 }
+            }
 
-                // since we already check if the stock exists when we search for it
-                // there is no need to check for it again here
-
-                user.stocks.push(symbol);
-                user.save(function(err) {
-                    if (err) {
-                        return res.json({
-                            success: false,
-                            msg: 'Could not save the stock'
-                        });
-                    }
-
+            user.stocks.push(symbol);
+            user.save(function(err) {
+                if (err) {
                     return res.json({
-                        success: true,
-                        msg: "Stock: " + symbol + " has been added to your watch list" 
+                        success: false,
+                        msg: 'Could not save the stock'
                     });
-                });
+                }
 
-            })
+                return res.json({
+                    success: true,
+                    msg: "Stock: " + symbol + " has been added to your watch list" 
+                });
+            });
         } else {
             return res.json({
                 success: false,
@@ -206,38 +214,29 @@ var StockController = (function() {
     }
 
     var remove = function(req, res, next) {
-        var id = req.headers["_id"];
-        var symbol = req.body.symbol;
+        var user = req["currentUser"];
+        var symbol = req.body.symbol.toUpperCase();
 
         if (symbol) {
-            User.findOne({ _id: id }, function(err, user) {
+            for (var i = 0; i < user.stocks.length; i++) {
+                if (user.stocks[i] === symbol) {
+                    user.stocks.splice(i, 1);
+                }
+            }
+
+            user.save(function(err) {
                 if (err) {
                     return res.json({
                         success: false,
-                        msg: 'We couldn\'t find your account :/'
+                        msg: 'Failed to remove stock'
                     })
                 }
 
-                for (var i = 0; i < user.stocks.length; i++) {
-                    if (user.stocks[i] === symbol) {
-                        user.stocks.splice(i, 1);
-                    }
-                }
-
-                user.save(function(err) {
-                    if (err) {
-                        return res.json({
-                            success: false,
-                            msg: 'Failed to remove stock'
-                        })
-                    }
-
-                    return res.json({
-                        success: true,
-                        msg: 'You are no longer watching ' + symbol
-                    });
-                })
-            })
+                return res.json({
+                    success: true,
+                    msg: 'You are no longer watching ' + symbol
+                });
+            });
         } else {
             return res.json({
                 success: false,
