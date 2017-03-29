@@ -10,15 +10,12 @@ var UserController = (function() {
         if(!user) {
             return res.json({ success: false, msg: "Missing user" });
         }
-
         if (req.body["firstName"]) {
             user.firstName = req.body["firstName"];
         }
-
         if (req.body["lastName"]) {
             user.lastName = req.body["lastName"];
         }
-
         if (req.body["email"]) {
             user.email = req.body["email"]; 
         }
@@ -45,20 +42,27 @@ var UserController = (function() {
 
     // for some reason "delete" will not work as a method name......
     var deleteAccount = function(req, res, next) {
-        var id = req.headers["_id"];
-
-        if (!id) {
-            return res.json({ success: false, msg: "Missing id" });
+        var user = req["currentUser"];
+        
+        if (!user) {
+            return res.json({ success: false, msg: "Missing user" });
         }
 
-        User.findOneAndRemove({ _id: id }, function(err, user) {
+        user.deleteAccount(function(err, result) {
             if (err) {
-                return res.json({ success: false, msg: "Could not delete your account. Please try again." });
+                console.log(err);
+                return res.json({
+                    success: true,
+                    msg: "Your account could not be deleted, please try again."
+                })
             }
 
+            res.set('x-access-token', '');
+            res.set('user', '');
             return res.json({
-                success: true
-            });
+                success: true,
+                msg: "Your account has been deleted. Sad to see you go :("
+            })
         });
     }
 

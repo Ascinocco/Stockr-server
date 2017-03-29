@@ -80,6 +80,12 @@ userSchema.methods.addToken = function (token) {
     user.token.valid = true;
 }
 
+userSchema.methods.deleteAccount = function(callback) {
+    var user = this;
+    User.findOneAndRemove({ _id: user._id }, callback)
+
+}
+
 // removes password field
 // any time user data is sent to the client
 // it should be sent as JSON

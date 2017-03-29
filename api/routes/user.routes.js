@@ -6,6 +6,6 @@ var authMiddlware = require('../middleware/auth.middleware');
 // auth route middleware
 router.use(authMiddlware.checkToken);
 router.post('/update', userController.update);
-router.delete('/deleteAccount', userController.deleteAccount);
+router.delete('/delete', userController.deleteAccount);
 
 module.exports = router;
