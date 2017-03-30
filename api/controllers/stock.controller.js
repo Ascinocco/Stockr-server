@@ -133,9 +133,14 @@ var StockController = (function() {
 
     var search = function(req, res, next) {
         // check if stock exists
-        var checkSymbols = [ symbol ];
-        var checkUrl = buildStockQueryString(checkSymbols, { SYMBOL: STOCK_FORMATER_KEYS.SYMBOL });
-        var checkOptions = assembleRequest(url);
+        var checkSymbols = [ req.body.symbol.toUpperCase() ];
+        var checkUrl = buildStockQueryString(checkSymbols, { 
+            SYMBOL: STOCK_FORMATER_KEYS.SYMBOL,
+            NAME: STOCK_FORMATER_KEYS.NAME,
+            ASKING_PRICE: STOCK_FORMATER_KEYS.ASKING_PRICE,
+            WEEKS_RANGE: STOCK_FORMATER_KEYS.WEEKS_RANGE
+        });
+        var checkOptions = assembleRequest(checkUrl);
 
         request(checkOptions, function(error, response, checkedCsvStock) {
             if (error) {
@@ -155,6 +160,11 @@ var StockController = (function() {
 
             var jsonStockData = resultsArrayToArryOfJson(jsonResults.data);
                 jsonResults.data = jsonStockData;
+                
+                return res.json({
+                    success: true,
+                    jsonResults: jsonStockData
+                })
             })
     }
 
